@@ -1,0 +1,19 @@
+# Core Flask web server
+Flask==2.3.3
+Flask-SocketIO==5.3.6
+
+# Cryptography and ECDSA for wallets
+cryptography==41.0.7
+ecdsa==0.18.0
+
+# HTTP requests
+requests==2.31.0
+
+# Standard libraries (included with Python, listed for clarity)
+hashlib
+threading
+json
+time
+socket
+random
+argparse

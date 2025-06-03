@@ -1,0 +1,443 @@
+
+
+:root {
+    --primary-color: #00FFD1;
+    --background-dark: #0A1F1F;
+    --card-background: rgba(10, 31, 31, 0.8);
+    --accent-glow: rgba(0, 255, 209, 0.2);
+
+    --danger-color: #ff4e4e;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+
+body {
+    background: linear-gradient(120deg, var(--background-dark), #0A2B2B, var(--background-dark));
+    color: var(--primary-color);
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.6;
+}
+
+/* Layout */
+.container {
+    max-width: 1200px;
+    margin: auto;
+    
+}
+ 
+ .HayOs {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px;
+  
+    padding: 0 20px;
+}
+ 
+ /* Header styles */
+.header {
+    width: 100%;
+    padding: 20px 0;
+    background: linear-gradient(45deg, #0A1F1F, #1A3C3C);
+    border-bottom: 0px solid #00FF88;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+/* Header brand (SVG logo) */
+.header-brand {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.header-brand svg {
+    max-width: 250px;
+    height: auto;
+    filter: drop-shadow(0 0 10px #00FF88);
+}
+
+/* Navigation styles */
+.nav {
+    display: flex;
+    gap: 20px;
+    
+    align-item: center;
+}
+
+.nav-link {
+    color: #00FFD1;
+    text-decoration: none;
+    font-size: 1.1rem;
+    padding: 10px 15px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 5px #00FF88;
+    position: relative;
+}
+
+.nav-link:hover {
+    border-color: #00FF88;
+    box-shadow: 0 0 10px #00FF88;
+    transform: translateY(-2px);
+}
+
+/* Sharp border cuts effect */
+.nav-link::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    width: 10px;
+    height: 10px;
+    border-top: 2px solid #00FF88;
+    border-left: 2px solid #00FF88;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    border-bottom: 2px solid #00FF88;
+    border-right: 2px solid #00FF88;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.nav-link:hover::before,
+.nav-link:hover::after {
+    opacity: 1;
+}
+
+/* Theme switcher */
+.theme-switcher {
+    display: flex;
+    align-items: center;
+}
+
+.btn-theme {
+    background: none;
+    border: 2px solid #00FF88;
+    color: #00FFD1;
+    font-size: 1.5rem;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+.btn-theme:hover {
+    background: #00FF88;
+    color: #0A1F1F;
+    box-shadow: 0 0 15px #00FF88;
+}
+
+/* Hamburger menu */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 30px;
+    height: 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.hamburger span {
+    width: 100%;
+    height: 3px;
+    background: #00FFD1;
+    transition: all 0.3s ease;
+}
+
+.hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -7px);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .hamburger {
+        display: flex;
+    }
+
+    .nav {
+        display: none;
+        flex-direction: column;
+        position: absolute;
+        top: 80px;
+        left: 0;
+        width: 100%;
+        background: #0A1F1F;
+        padding: 20px;
+        border-top: 2px solid #00FF88;
+        box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+    }
+
+    .nav.active {
+        display: flex;
+    }
+
+    .nav-link {
+        padding: 15px;
+        font-size: 1.2rem;
+        text-align: center;
+    }
+
+    .theme-switcher {
+        margin-left: auto;
+    }
+
+    .header-brand svg {
+        max-width: 200px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-brand svg {
+        max-width: 150px;
+    }
+
+    .container {
+        padding: 0 10px;
+    }
+}
+
+.main {
+    margin-top: 2rem;
+}
+
+/* Cards and Grids */
+.card {
+    background-color: var(--card-background);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 0 15px var(--accent-glow);
+}
+
+.card-header h3 {
+    margin-bottom: 0.5rem;
+}
+
+.card-body {
+    padding-top: 0.5rem;
+}
+
+/* Buttons */
+.btn {
+    background: none;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.3s, color 0.3s;
+}
+
+.btn:hover {
+    background-color: var(--primary-color);
+    color: #0A1F1F;
+}
+
+.btn-primary {
+    border-color: var(--primary-color);
+}
+
+.btn-danger {
+    border-color: var(--danger-color);
+    color: var(--danger-color);
+}
+
+.btn-danger:hover {
+    background-color: var(--danger-color);
+    color: #0A1F1F;
+}
+
+.btn-success {
+    border-color: #00ffa2;
+    color: #00ffa2;
+}
+
+.btn-success:hover {
+    background-color: #00ffa2;
+    color: #0A1F1F;
+}
+
+/* Forms */
+.form-control {
+    width: 100%;
+    padding: 0.5rem;
+    margin: 0.3rem 0 1rem;
+    background: #0A2B2B;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--primary-color);
+}
+
+label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+/* Utilities */
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.2rem 0;
+    border-bottom: 1px solid #00ffd122;
+}
+
+.address, .balance {
+    font-family: monospace;
+    word-break: break-all;
+}
+
+.status-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card-background);
+    border-top: 1px solid var(--border-color);
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-around;
+    font-size: 0.9rem;
+}
+
+/* Status Colors */
+.status-bar #connection-status {
+    color: #ff4e4e;
+}
+
+.status-bar #connection-status.connected {
+    color: #00ffa2;
+}
+
+/* Tables, Lists, etc. */
+ul.peer-list {
+    list-style: none;
+    padding-left: 0;
+}
+
+ul.peer-list li {
+    padding: 0.3rem 0;
+    border-bottom: 1px solid #00ffd122;
+}
+
+/* Chart/Canvas Placeholder */
+canvas {
+    background-color: #0a2f2f;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+/* Animations */
+@keyframes glow {
+    0% { box-shadow: 0 0 5px var(--accent-glow); }
+    50% { box-shadow: 0 0 20px var(--accent-glow); }
+    100% { box-shadow: 0 0 5px var(--accent-glow); }
+}
+  @keyframes glow {
+            0% { box-shadow: 0 0 4px var(--accent-glow); }
+            50% { box-shadow: 0 0 16px var(--accent-glow); }
+            100% { box-shadow: 0 0 4px var(--accent-glow); }
+        }
+
+        @media (max-width: 768px) {
+            .hamburger {
+                display: flex;
+            }
+
+            .nav {
+                display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 70px;
+                left: 0;
+                width: 100%;
+                background: var(--card-background);
+                padding: 15px;
+                border-top: 2px solid var(--border-color);
+                box-shadow: 0 0 12px var(--accent-glow);
+            }
+
+            .nav.active {
+                display: flex;
+            }
+
+            .nav-link {
+                padding: 10px;
+                font-size: 0.9rem;
+                text-align: center;
+            }
+
+            .theme-switcher {
+                margin-left: auto;
+            }
+
+            .header-brand svg {
+                max-width: 180px;
+            }
+
+            .header {
+                padding: 0.6rem;
+            }
+
+            .btn-theme {
+                font-size: 1rem;
+                padding: 5px 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-brand svg {
+                max-width: 140px;
+            }
+
+            .container {
+                padding: 0 8px;
+            }
+
+            .nav-link {
+                font-size: 0.8rem;
+                padding: 8px;
+            }
+
+            .hamburger {
+                width: 22px;
+                height: 16px;
+            }
+
+            .hamburger span {
+                height: 2px;
+            }
+
+            .nav {
+                padding: 10px;
+                top: 60px;
+            }

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Blockchain Explorer - HayX{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>🔗 Blockchain Explorer</h2>
+    <div class="page-actions">
+        <button id="refreshChain" class="btn btn-secondary">Refresh</button>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <div class="card-header">
+            <h3>Blockchain Statistics</h3>
+        </div>
+        <div class="card-body">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">{{ stats.total_blocks }}</div>
+                    <div class="stat-label">Total Blocks</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ stats.pending_transactions }}</div>
+                    <div class="stat-label">Pending Transactions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ stats.difficulty }}</div>
+                    <div class="stat-label">Current Difficulty</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">{{ "%.2f"|format(stats.total_supply|default(0)) }}</div>
+                    <div class="stat-label">Total Supply (HayX)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Recent Blocks</h3>
+    </div>
+    <div class="card-body">
+        {% if blocks %}
+        <div class="blocks-list">
+            {% for block in blocks %}
+            <div class="block-item" onclick="toggleBlockDetails({{ loop.index0 }})">
+                <div class="block-header">
+                    <div class="block-info">
+                        <span class="block-index">#{{ block.index }}</span>
+                        <span class="block-hash">{{ block.hash[:16] }}...</span>
+                        <span class="block-time">{{ block.timestamp|int|timestamp_to_date }}</span>
+                    </div>
+                    <div class="block-stats">
+                        <span class="tx-count">{{ block.transactions|length }} transactions</span>
+                        <span class="block-nonce">Nonce: {{ block.nonce }}</span>
+                    </div>
+                </div>
+                
+                <div id="blockDetails{{ loop.index0 }}" class="block-details" style="display: none;">
+                    <div class="detail-row">
+                        <label>Full Hash:</label>
+                        <span class="hash-full">{{ block.hash }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Previous Hash:</label>
+                        <span class="hash-full">{{ block.previous_hash }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <label>Timestamp:</label>
+                        <span>{{ block.timestamp }} ({{ block.timestamp|int|timestamp_to_date }})</span>
+                    </div>
+                    
+                    <div class="transactions-section">
+                        <h4>Transactions:</h4>
+                        {% for tx in block.transactions %}
+                        <div class="transaction-detail">
+                            <div class="tx-row">
+                                <label>TX ID:</label>
+                                <span class="tx-id">{{ tx.tx_id }}</span>
+                            </div>
+                            <div class="tx-row">
+                                <label>From:</label>
+                                <span class="address">{{ tx.sender }}</span>
+                            </div>
+                            <div class="tx-row">
+                                <label>To:</label>
+                                <span

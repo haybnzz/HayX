@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Wallet - HayX{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>💰 Wallet Management</h2>
+    <div class="page-actions">
+        <button id="createWallet" class="btn btn-primary">Create New Wallet</button>
+        <button id="refreshBalance" class="btn btn-secondary">Refresh</button>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <div class="card-header">
+            <h3>Current Wallet</h3>
+        </div>
+        <div class="card-body">
+            {% if wallet %}
+            <div class="wallet-info">
+                <div class="info-row">
+                    <label>Name:</label>
+                    <span>{{ wallet.name }}</span>
+                </div>
+                <div class="info-row">
+                    <label>Address:</label>
+                    <span class="address">{{ wallet.get_address() }}</span>
+                    <button class="btn-copy" onclick="copyToClipboard('{{ wallet.get_address() }}')">📋</button>
+                </div>
+                <div class="info-row">
+                    <label>Balance:</label>
+                    <span class="balance">{{ "%.8f"|format(balance) }} HayX</span>
+                </div>
+            </div>
+            
+            <div class="wallet-selector">
+                <label for="walletSelect">Switch Wallet:</label>
+                <select id="walletSelect" class="form-control">
+                    {% for w in wallets %}
+                    <option value="{{ w }}" {% if w == wallet.name %}selected{% endif %}>{{ w }}</option>
+                    {% endfor %}
+                </select>
+                <button id="switchWallet" class="btn btn-primary">Switch</button>
+            </div>
+            {% else %}
+            <p>No wallet loaded. Please create a new wallet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Send Transaction</h3>
+        </div>
+        <div class="card-body">
+            <form id="sendForm" class="send-form">
+                <div class="form-group">
+                    <label for="recipient">Recipient Address:</label>
+                    <input type="text" id="recipient" class="form-control" placeholder="Enter recipient address" required>
+                </div>
+                <div class="form-group">
+                    <label for="amount">Amount:</label>
+                    <input type="number" id="amount" class="form-control" step="0.00000001" min="0" placeholder="0.00000000" required>
+                </div>
+                <div class="form-group">
+                    <label for="fee">Transaction Fee:</label>
+                    <input type="number" id="fee" class="form-control" step="0.00000001" value="0.01" min="0.001">
+                </div>
+                <button type="submit" class="btn btn-primary">Send Transaction</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Transaction History</h3>
+    </div>
+    <div class="card-body">
+        {% if transactions %}
+        <div class="transaction-list">
+            {% for tx in transactions %}
+            <div class="transaction-item">
+                <div class="tx-header">
+                    <span class="tx-id">{{ tx.tx_id[:16] }}...</span>
+                    <span class="tx-amount {% if tx.recipient == wallet.get_address() %}received{% else %}sent{% endif %}">
+                        {% if tx.recipient == wallet.get_address() %}+{% else %}-{% endif %}{{ "%.8f"|format(tx.amount) }} HayX
+                    </span>
+                </div>
+                <div class="tx-details">
+                    <small>Block: {{ tx.block_index }} | {{ tx.timestamp|int|timestamp_to_date }}</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p>No transactions found.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('createWallet').addEventListener('click', function() {
+    const name = prompt('Enter wallet name:');
+    if (name) {
+        fetch('/api/wallet/create', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({name: name})
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Wallet created successfully!');
+                location.reload();
+            } else {
+                alert('Error creating wallet');
+            }
+        });
+    }
+});
+
+document.getElementById('switchWallet').addEventListener('click', function() {
+    const selectedWallet = document.getElementById('walletSelect').value;
+    fetch('/api/wallet/switch', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name: selectedWallet})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert('Error switching wallet');
+        }
+    });
+});
+
+document.getElementById('sendForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const recipient = document.getElementById('recipient').value;
+    const amount = parseFloat(document.getElementById('amount').value);
+    const fee = parseFloat(document.getElementById('fee').value);
+    
+    if (!recipient || amount <= 0) {
+        alert('Please fill in all fields correctly');
+        return;
+    }
+    
+    fetch('/api/transaction/send', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            recipient: recipient,
+            amount: amount,
+            fee: fee
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Transaction sent successfully!');
+            document.getElementById('sendForm').reset();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            alert('Transaction failed: ' + data.message);
+        }
+    });
+});
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Address copied to clipboard!');
+    });
+}
+</script>
+{% endblock %}

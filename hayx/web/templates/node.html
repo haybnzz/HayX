@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Node - HayX{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>🌐 Node Management</h2>
+    <div class="page-actions">
+        <button id="startNode" class="btn btn-success" {% if node_stats.is_running %}disabled{% endif %}>▶️ Start Node</button>
+        <button id="stopNode" class="btn btn-danger" {% if not node_stats.is_running %}disabled{% endif %}>⏹️ Stop Node</button>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Node Status</h3>
+    </div>
+    <div class="card-body">
+        <div class="info-row">
+            <label>Status:</label>
+            <span>{% if node_stats.is_running %}🟢 Running{% else %}🔴 Stopped{% endif %}</span>
+        </div>
+        <div class="info-row">
+            <label>Listening Port:</label>
+            <span>{{ node_stats.port }}</span>
+        </div>
+        <div class="info-row">
+            <label>Connected Peers:</label>
+            <span>{{ node_stats.peer_count }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Peers</h3>
+    </div>
+    <div class="card-body">
+        {% if peers %}
+        <ul class="peer-list">
+            {% for peer in peers %}
+            <li>{{ peer }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No peers connected.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('startNode')?.addEventListener('click', function () {
+    fetch('/api/node/start', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Node started successfully');
+                location.reload();
+            }
+        });
+});
+
+document.getElementById('stopNode')?.addEventListener('click', function () {
+    fetch('/api/node/stop', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Node stopped');
+                location.reload();
+            }
+        });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,28 @@
+[
+  {
+    "index": 0,
+    "timestamp": 1717000000.0,
+    "transactions": [
+      {
+        "tx_id": "4f3b2a1e...",
+        "sender": "coinbase",
+        "recipient": "genesis",
+        "amount": 1000000.0,
+        "fee": 0,
+        "timestamp": 1717000000.0,
+        "signature": null
+      }
+    ],
+    "previous_hash": "0",
+    "nonce": 523,
+    "hash": "0000abcd1234ef5678..."
+  },
+  {
+    "index": 1,
+    "timestamp": 1717000300.0,
+    "transactions": [],
+    "previous_hash": "0000abcd1234ef5678...",
+    "nonce": 1042,
+    "hash": "0000bcde2345fa6789..."
+  }
+]

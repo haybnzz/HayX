@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}HayX Cryptocurrency{% endblock %}</title>
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+
+</head>
+<body>
+   <header class="header">
+    <div class="HayOs">
+        <div class="header-brand">
+            <svg width="270" height="90" viewBox="0 0 300 100" xmlns="http://www.w3.org/2000/svg">
+                <g transform="translate(20, 25) scale(0.9)">
+                    <path d="M30 30 C25 15, 35 10, 40 15 C45 10, 55 15, 50 30 C55 45, 45 50, 40 45 C35 50, 25 45, 30 30"
+                        fill="none" stroke="#00FF88" stroke-width="4"/>
+                    <path d="M30 30 C25 20, 20 15, 15 10" stroke="#00FF88" stroke-width="3" fill="none"/>
+                    <path d="M50 30 C55 20, 60 15, 65 10" stroke="#00FF88" stroke-width="3" fill="none"/>
+                    <path d="M30 30 C25 40, 20 45, 15 50" stroke="#00FF88" stroke-width="3" fill="none"/>
+                    <path d="M50 30 C55 40, 60 45, 65 50" stroke="#00FF88" stroke-width="3" fill="none"/>
+                    <circle cx="30" cy="30" r="5" fill="none" stroke="#00FF88" stroke-width="2" opacity="0.4"/>
+                    <circle cx="50" cy="30" r="5" fill="none" stroke="#00FF88" stroke-width="2" opacity="0.4"/>
+                    <circle cx="15" cy="10" r="3" fill="none" stroke="#00FF88" stroke-width="1.5" opacity="0.4"/>
+                    <circle cx="65" cy="10" r="3" fill="none" stroke="#00FF88" stroke-width="1.5" opacity="0.4"/>
+                    <circle cx="15" cy="50" r="3" fill="none" stroke="#00FF88" stroke-width="1.5" opacity="0.4"/>
+                    <circle cx="65" cy="50" r="3" fill="none" stroke="#00FF88" stroke-width="1.5" opacity="0.4"/>
+                </g>
+                <text x="90" y="65" font-family="'Orbitron', sans-serif" font-size="36" fill="#00FFD1" font-weight="bold" text-anchor="start">
+                    HayX
+                </text>
+            </svg><br>
+ <button class="hamburger" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <nav class="nav">
+            <a href="/wallet" class="nav-link">💰 Wallet</a>
+            <a href="/miner" class="nav-link">⛏️ Miner</a>
+            <a href="/chain" class="nav-link">🔗 Chain</a>
+            <a href="/node" class="nav-link">🌐 Node</a>
+            <a href="/settings" class="nav-link">⚙️ Settings</a>
+            <button id="themeToggle" class="btn-theme">🌙</button>
+        </nav>
+     
+        </div>
+       
+    </div>
+</header>
+</div>
+    <main class="main">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <div id="status-bar" class="status-bar">
+        <span id="connection-status">🔴 Disconnected</span>
+        <span id="block-height">Block: 0</span>
+        <span id="balance">Balance: 0 HayX</span>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

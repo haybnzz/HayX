@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - HayX{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>⚙️ Settings</h2>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Configuration Overview</h3>
+    </div>
+    <div class="card-body">
+        <div class="settings-list">
+            <div class="info-row"><label>Network Port:</label><span>{{ config.P2P_PORT }}</span></div>
+            <div class="info-row"><label>Web Port:</label><span>{{ config.WEB_PORT }}</span></div>
+            <div class="info-row"><label>Difficulty Target:</label><span>{{ config.DIFFICULTY_TARGET }}</span></div>
+            <div class="info-row"><label>Mining Reward:</label><span>{{ config.MINING_REWARD }} HayX</span></div>
+            <div class="info-row"><label>Genesis Reward:</label><span>{{ config.GENESIS_REWARD }} HayX</span></div>
+            <div class="info-row"><label>Block Time Target:</label><span>{{ config.BLOCK_TIME_TARGET }}s</span></div>
+            <div class="info-row"><label>Max Transactions/Block:</label><span>{{ config.MAX_TRANSACTIONS_PER_BLOCK }}</span></div>
+            <div class="info-row"><label>Auto Refresh Interval:</label><span>{{ config.AUTO_REFRESH_INTERVAL }}ms</span></div>
+            <div class="info-row"><label>Theme:</label><span>{{ config.THEME }}</span></div>
+            <div class="info-row"><label>Bootstrap Nodes:</label><span>{{ config.BOOTSTRAP_NODES|join(', ') }}</span></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

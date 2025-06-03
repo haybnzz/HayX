@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block title %}Miner - HayX{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>⛏️ Mining Control</h2>
+    <div class="mining-status">
+        <span id="miningStatus" class="status {% if mining_stats.is_mining %}active{% endif %}">
+            {% if mining_stats.is_mining %}🟢 Mining Active{% else %}🔴 Mining Stopped{% endif %}
+        </span>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <div class="card-header">
+            <h3>Mining Controls</h3>
+        </div>
+        <div class="card-body">
+            <div class="mining-controls">
+                <button id="startMining" class="btn btn-success" {% if mining_stats.is_mining %}disabled{% endif %}>▶️ Start Mining</button>
+                <button id="stopMining" class="btn btn-danger" {% if not mining_stats.is_mining %}disabled{% endif %}>⏹️ Stop Mining</button>
+            </div>
+            <div class="mining-info">
+                <div class="info-row"><label>Mining Address:</label><span class="address">{{ mining_stats.wallet_address or 'No wallet selected' }}</span></div>
+                <div class="info-row"><label>Current Difficulty:</label><span>{{ mining_stats.difficulty }}</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Mining Statistics</h3>
+        </div>
+        <div class="card-body">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="hashRate">{{ "%.2f"|format(mining_stats.hash_rate) }}</div>
+                    <div class="stat-label">Hash Rate (H/s)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="blocksMinedCount">{{ mining_stats.blocks_mined }}</div>
+                    <div class="stat-label">Blocks Mined</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="estimatedReward">{{ "%.2f"|format(mining_stats.blocks_mined * 50) }}</div>
+                    <div class="stat-label">Total Rewards (HayX)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Mining Performance</h3>
+    </div>
+    <div class="card-body">
+        <div class="performance-chart">
+            <canvas id="hashRateChart" width="600" height="200"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Pending Transactions</h3>
+    </div>
+    <div class="card-body">
+        <div id="pendingTransactions">
+            <p>Loading pending transactions...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let hashRateHistory = [];
+const socket = io();
+
+socket.on('stats_update', (data) => {
+    const mining = data.mining || {};
+    document.getElementById('hashRate').innerText = (mining.hash_rate || 0).toFixed(2);
+    document.getElementById('blocksMinedCount').innerText = mining.blocks_mined || 0;
+    document.getElementById('estimatedReward').innerText = ((mining.blocks_mined || 0) * 50).toFixed(2);
+
+    // Update chart data
+    hashRateHistory.push(mining.hash_rate || 0);
+    if (hashRateHistory.length > 20) hashRateHistory.shift();
+    updateChart();
+});
+
+document.getElementById('startMining').addEventListener('click', function() {
+    fetch('/api/mining/start', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                updateMiningStatus(true);
+                alert('Mining started!');
+            } else {
+                alert('Failed to start mining: ' + (data.message || 'Unknown error'));
+            }
+        });
+});
+
+document.getElementById('stopMining').addEventListener('click', function() {
+    fetch('/api/mining/stop', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.status === 'success') {
+                updateMiningStatus(false);
+                alert('Mining stopped!');
+            }
+        });
+});
+
+function updateMiningStatus(isMining) {
+    const status = document.getElementById('miningStatus');
+    const startBtn = document.getElementById('startMining');
+    const stopBtn = document.getElementById('stopMining');
+    if (isMining) {
+        status.textContent = '🟢 Mining Active';
+        status.className = 'status active';
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+    } else {
+        status.textContent = '🔴 Mining Stopped';
+        status.className = 'status';
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+    }
+}
+
+function updateChart() {
+    const canvas = document.getElementById('hashRateChart');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const maxRate = Math.max(...hashRateHistory, 1);
+    const width = canvas.width;
+    const height = canvas.height;
+    const padding = 20;
+
+    ctx.strokeStyle = '#00ff88';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+
+    for (let i = 0; i < hashRateHistory.length; i++) {
+        const x = padding + (i / (hashRateHistory.length - 1)) * (width - 2 * padding);
+        const y = height - padding - (hashRateHistory[i] / maxRate) * (height - 2 * padding);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(padding, padding);
+    ctx.lineTo(padding, height - padding);
+    ctx.lineTo(width - padding, height - padding);
+    ctx.stroke();
+}
+
+// Optional: initial fetch fallback
+setInterval(() => socket.emit('ping'), 2000);
+</script>
+{% endblock %}
