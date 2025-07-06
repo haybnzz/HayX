@@ -5,6 +5,7 @@ from hayx.crypto.wallet import Wallet
 from hayx.mining.miner import Miner
 from hayx.network.node import Node
 from config import Config
+import time
 
 api = Blueprint('api', __name__)
 blockchain = Blockchain()
