@@ -8,12 +8,3 @@ ecdsa==0.18.0
 
 # HTTP requests
 requests==2.31.0
-
-# Standard libraries (included with Python, listed for clarity)
-hashlib
-threading
-json
-time
-socket
-random
-argparse

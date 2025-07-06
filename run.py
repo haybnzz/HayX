@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from hayx.web.app import app, socketio
 from config import Config
 
