@@ -7,7 +7,8 @@
     <h2>💰 Wallet Management</h2>
     <div class="page-actions">
         <button id="createWallet" class="btn btn-primary">Create New Wallet</button>
-        <button id="refreshBalance" class="btn btn-secondary">Refresh</button>
+        <button id="refreshBalance" class="btn btn-secondary">🔄 Refresh</button>
+        <span id="lastUpdate" class="update-time">Last updated: Never</span>
     </div>
 </div>
 
@@ -30,7 +31,11 @@
                 </div>
                 <div class="info-row">
                     <label>Balance:</label>
-                    <span class="balance">{{ "%.8f"|format(balance) }} HayX</span>
+                    <span class="balance" id="walletBalance">{{ "%.8f"|format(balance) }} HayX</span>
+                </div>
+                <div class="info-row">
+                    <label>Status:</label>
+                    <span id="walletStatus">🟢 Active</span>
                 </div>
             </div>
             
@@ -76,33 +81,101 @@
 <div class="card">
     <div class="card-header">
         <h3>Transaction History</h3>
+        <div class="header-actions">
+            <button id="refreshTransactions" class="btn btn-sm btn-secondary">🔄 Refresh</button>
+        </div>
     </div>
     <div class="card-body">
-        {% if transactions %}
-        <div class="transaction-list">
-            {% for tx in transactions %}
-            <div class="transaction-item">
-                <div class="tx-header">
-                    <span class="tx-id">{{ tx.tx_id[:16] }}...</span>
-                    <span class="tx-amount {% if tx.recipient == wallet.get_address() %}received{% else %}sent{% endif %}">
-                        {% if tx.recipient == wallet.get_address() %}+{% else %}-{% endif %}{{ "%.8f"|format(tx.amount) }} HayX
-                    </span>
+        <div id="transactionList">
+            {% if transactions %}
+            <div class="transaction-list">
+                {% for tx in transactions %}
+                <div class="transaction-item">
+                    <div class="tx-header">
+                        <span class="tx-id">{{ tx.tx_id[:16] }}...</span>
+                        <span class="tx-amount {% if tx.recipient == wallet.get_address() %}received{% else %}sent{% endif %}">
+                            {% if tx.recipient == wallet.get_address() %}+{% else %}-{% endif %}{{ "%.8f"|format(tx.amount) }} HayX
+                        </span>
+                    </div>
+                    <div class="tx-details">
+                        <small>Block: {{ tx.block_index }} | {{ tx.timestamp|int|timestamp_to_date }}</small>
+                    </div>
                 </div>
-                <div class="tx-details">
-                    <small>Block: {{ tx.block_index }} | {{ tx.timestamp|int|timestamp_to_date }}</small>
-                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
+            {% else %}
+            <p>No transactions found.</p>
+            {% endif %}
         </div>
-        {% else %}
-        <p>No transactions found.</p>
-        {% endif %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3>Network Status</h3>
+    </div>
+    <div class="card-body">
+        <div class="network-info">
+            <div class="info-row">
+                <label>Blockchain Height:</label>
+                <span id="blockHeight">Loading...</span>
+            </div>
+            <div class="info-row">
+                <label>Connection Status:</label>
+                <span id="connectionStatus">Checking...</span>
+            </div>
+            <div class="info-row">
+                <label>Last Block Time:</label>
+                <span id="lastBlockTime">Unknown</span>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
+const socket = io();
+let lastUpdateTime = null;
+
+// Socket event handlers
+socket.on('connect', function() {
+    console.log('Connected to server');
+    document.getElementById('connectionStatus').textContent = '🟢 Connected';
+    updateLastUpdateTime();
+});
+
+socket.on('disconnect', function() {
+    console.log('Disconnected from server');
+    document.getElementById('connectionStatus').textContent = '🔴 Disconnected';
+});
+
+socket.on('stats_update', function(data) {
+    console.log('Received stats update:', data);
+    
+    const wallet = data.wallet || {};
+    const blockchain = data.blockchain || {};
+    
+    // Update wallet balance
+    if (wallet.balance !== undefined) {
+        document.getElementById('walletBalance').innerText = wallet.balance.toFixed(8) + ' HayX';
+    }
+    
+    // Update network info
+    if (blockchain.total_blocks !== undefined) {
+        document.getElementById('blockHeight').textContent = blockchain.total_blocks;
+    }
+    
+    updateLastUpdateTime();
+});
+
+function updateLastUpdateTime() {
+    lastUpdateTime = new Date();
+    document.getElementById('lastUpdate').textContent = 
+        'Last updated: ' + lastUpdateTime.toLocaleTimeString();
+}
+
+// Wallet management
 document.getElementById('createWallet').addEventListener('click', function() {
     const name = prompt('Enter wallet name:');
     if (name) {
@@ -117,15 +190,19 @@ document.getElementById('createWallet').addEventListener('click', function() {
                 alert('Wallet created successfully!');
                 location.reload();
             } else {
-                alert('Error creating wallet');
+                alert('Error creating wallet: ' + (data.message || 'Unknown error'));
             }
+        })
+        .catch(error => {
+            console.error('Error creating wallet:', error);
+            alert('Failed to create wallet');
         });
     }
 });
 
 document.getElementById('switchWallet').addEventListener('click', function() {
     const selectedWallet = document.getElementById('walletSelect').value;
-    fetch('/api/wallet/switch', {
+    fetch('/wallet/switch', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({name: selectedWallet})
@@ -135,11 +212,25 @@ document.getElementById('switchWallet').addEventListener('click', function() {
         if (data.status === 'success') {
             location.reload();
         } else {
-            alert('Error switching wallet');
+            alert('Error switching wallet: ' + (data.message || 'Unknown error'));
         }
+    })
+    .catch(error => {
+        console.error('Error switching wallet:', error);
+        alert('Failed to switch wallet');
     });
 });
 
+document.getElementById('refreshBalance').addEventListener('click', function() {
+    socket.emit('get_stats');
+    updateLastUpdateTime();
+});
+
+document.getElementById('refreshTransactions').addEventListener('click', function() {
+    location.reload();
+});
+
+// Transaction sending
 document.getElementById('sendForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
@@ -151,6 +242,12 @@ document.getElementById('sendForm').addEventListener('submit', function(e) {
         alert('Please fill in all fields correctly');
         return;
     }
+    
+    // Disable form during submission
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
     
     fetch('/api/transaction/send', {
         method: 'POST',
@@ -166,17 +263,60 @@ document.getElementById('sendForm').addEventListener('submit', function(e) {
         if (data.status === 'success') {
             alert('Transaction sent successfully!');
             document.getElementById('sendForm').reset();
-            setTimeout(() => location.reload(), 1000);
+            
+            // Refresh balance and transactions
+            setTimeout(() => {
+                socket.emit('get_stats');
+                location.reload();
+            }, 1000);
         } else {
-            alert('Transaction failed: ' + data.message);
+            alert('Transaction failed: ' + (data.message || 'Unknown error'));
         }
+    })
+    .catch(error => {
+        console.error('Error sending transaction:', error);
+        alert('Failed to send transaction');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
     });
 });
 
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
-        alert('Address copied to clipboard!');
+        // Show a temporary success message
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.textContent = '✅';
+        setTimeout(() => {
+            btn.textContent = originalText;
+        }, 1000);
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+        alert('Failed to copy address');
     });
 }
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Request initial stats
+    socket.emit('get_stats');
+    
+    // Set up periodic stats requests
+    setInterval(() => {
+        if (socket.connected) {
+            socket.emit('get_stats');
+        }
+    }, 10000); // Update every 10 seconds
+});
+
+// Handle page visibility changes
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        socket.emit('get_stats');
+    }
+});
 </script>
 {% endblock %}
+

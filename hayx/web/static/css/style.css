@@ -1,5 +1,3 @@
-
-
 :root {
     --primary-color: #00FFD1;
     --background-dark: #0A1F1F;
@@ -441,3 +439,218 @@ canvas {
                 padding: 10px;
                 top: 60px;
             }
+        }
+
+/* Activity logs and real-time updates */
+.activity-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    margin: 4px 0;
+    background: rgba(0, 255, 136, 0.1);
+    border-left: 3px solid #00FF88;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.activity-time {
+    color: #888;
+    font-size: 0.8rem;
+}
+
+.activity-message {
+    color: #00FFD1;
+    font-weight: 500;
+}
+
+/* Mining timer */
+.mining-timer {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(0, 255, 136, 0.1);
+    border-radius: 4px;
+    margin-left: 10px;
+}
+
+/* Chart controls */
+.chart-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(0, 255, 136, 0.05);
+    border-radius: 4px;
+}
+
+.chart-info {
+    font-size: 0.9rem;
+    color: #888;
+}
+
+/* Peer list improvements */
+.peer-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    margin: 5px 0;
+    background: rgba(0, 255, 136, 0.1);
+    border-radius: 6px;
+    border-left: 3px solid #00FF88;
+}
+
+.peer-address {
+    font-family: 'Courier New', monospace;
+    color: #00FFD1;
+    font-weight: 500;
+}
+
+.peer-status {
+    font-size: 0.9rem;
+    color: #00FF88;
+}
+
+/* Network status indicators */
+.network-stats .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.2);
+}
+
+.network-stats .info-row:last-child {
+    border-bottom: none;
+}
+
+/* Update time indicator */
+.update-time {
+    font-size: 0.8rem;
+    color: #888;
+    font-style: italic;
+}
+
+/* Header actions */
+.header-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* Add peer form */
+.add-peer-form {
+    display: flex;
+    gap: 10px;
+    align-items: end;
+}
+
+.add-peer-form .form-group {
+    flex: 1;
+}
+
+.add-peer-form .btn {
+    white-space: nowrap;
+}
+
+/* Mining performance improvements */
+.performance-chart {
+    position: relative;
+    height: 300px;
+    margin: 20px 0;
+}
+
+/* Status indicators */
+.status.active {
+    color: #00FF88;
+    text-shadow: 0 0 10px #00FF88;
+}
+
+.status {
+    color: #ff4e4e;
+    text-shadow: 0 0 10px #ff4e4e;
+}
+
+/* Real-time updates animation */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.7; }
+    100% { opacity: 1; }
+}
+
+.real-time-update {
+    animation: pulse 0.5s ease-in-out;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .add-peer-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .chart-controls {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+    
+    .mining-timer {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+    
+    .peer-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #00FF88;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error states */
+.error-message {
+    color: #ff4e4e;
+    background: rgba(255, 78, 78, 0.1);
+    padding: 10px;
+    border-radius: 4px;
+    border-left: 3px solid #ff4e4e;
+    margin: 10px 0;
+}
+
+/* Success states */
+.success-message {
+    color: #00FF88;
+    background: rgba(0, 255, 136, 0.1);
+    padding: 10px;
+    border-radius: 4px;
+    border-left: 3px solid #00FF88;
+    margin: 10px 0;
+}

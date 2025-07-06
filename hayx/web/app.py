@@ -132,22 +132,69 @@ def settings():
     return render_template('settings.html', config=Config)
 
 # API Endpoints
+@app.route('/api/mining/start', methods=['POST'])
+def start_mining():
+    global current_miner, current_wallet
+    try:
+        if not current_wallet:
+            return jsonify({'status': 'error', 'message': 'No wallet loaded'}), 400
+        
+        if not current_miner:
+            current_miner = Miner(current_wallet.get_address())
+        
+        if not current_miner.is_mining:
+            current_miner.start_mining()
+            print(f"✅ Mining started for wallet: {current_wallet.name}")
+            return jsonify({'status': 'success', 'message': 'Mining started successfully'})
+        else:
+            return jsonify({'status': 'error', 'message': 'Mining is already active'}), 400
+            
+    except Exception as e:
+        print(f"❌ Error starting mining: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@app.route('/api/mining/stop', methods=['POST'])
+def stop_mining():
+    global current_miner
+    try:
+        if current_miner and current_miner.is_mining:
+            current_miner.stop_mining()
+            print("✅ Mining stopped")
+            return jsonify({'status': 'success', 'message': 'Mining stopped successfully'})
+        else:
+            return jsonify({'status': 'error', 'message': 'Mining is not active'}), 400
+            
+    except Exception as e:
+        print(f"❌ Error stopping mining: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
 @app.route('/api/mining/stats')
 def get_mining_stats_api():
-    global current_miner, current_wallet
-    if not current_wallet or not current_miner:
-        return jsonify({'error': 'No active miner'}), 400
-    
-    stats = current_miner.get_mining_stats() if current_miner else {}
-    return jsonify({
-        'hash_rate': stats.get('hash_rate', 0),
-        'blocks_mined': stats.get('blocks_mined', 0),
-        'total_rewards': stats.get('blocks_mined', 0) * 50,
-        'is_mining': stats.get('is_mining', False),
-        'difficulty': blockchain.difficulty if hasattr(blockchain, 'difficulty') else 1,
-        'pending_transactions': len(blockchain.pending_transactions) if hasattr(blockchain, 'pending_transactions') else 0,
-        'timestamp': time.time()
-    })
+    global current_miner, current_wallet, blockchain
+    try:
+        if not current_wallet:
+            return jsonify({'error': 'No wallet loaded'}), 400
+        
+        if not current_miner:
+            current_miner = Miner(current_wallet.get_address())
+        
+        stats = current_miner.get_mining_stats() if current_miner else {}
+        wallet_balance = blockchain.get_balance(current_wallet.get_address()) if current_wallet else 0
+        
+        return jsonify({
+            'hash_rate': stats.get('hash_rate', 0),
+            'blocks_mined': stats.get('blocks_mined', 0),
+            'total_rewards': stats.get('blocks_mined', 0) * 50,
+            'is_mining': stats.get('is_mining', False),
+            'difficulty': blockchain.difficulty if hasattr(blockchain, 'difficulty') else 1,
+            'pending_transactions': len(blockchain.pending_transactions) if hasattr(blockchain, 'pending_transactions') else 0,
+            'wallet_balance': wallet_balance,
+            'wallet_address': current_wallet.get_address(),
+            'timestamp': time.time()
+        })
+    except Exception as e:
+        print(f"❌ Error getting mining stats: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/mining/hashrate-history')
 def get_hashrate_history():
@@ -184,14 +231,6 @@ def get_pending_transactions():
                 'timestamp': getattr(tx, 'timestamp', time.time())
             })
     return jsonify(pending_txs)
-
-@app.route('/api/mining/start-realtime')
-def start_realtime_mining():
-    return jsonify({'message': 'Real-time updates started', 'status': 'success'})
-
-@app.route('/api/mining/stop-realtime')
-def stop_realtime_mining():
-    return jsonify({'message': 'Real-time updates stopped', 'status': 'success'})
 
 @app.route('/wallet/switch', methods=['POST'])
 def switch_wallet_route():
@@ -269,12 +308,44 @@ def handle_disconnect():
 # Periodic Background Updates
 def background_updates():
     while True:
-        socketio.sleep(5)
-        stats = {
-            'blockchain': blockchain.get_stats(),
-            'mining': current_miner.get_mining_stats() if current_miner else {'is_mining': False}
-        }
-        socketio.emit('stats_update', stats)
+        try:
+            socketio.sleep(2)  # Update every 2 seconds for better real-time experience
+            
+            # Get current stats
+            blockchain_stats = blockchain.get_stats()
+            mining_stats = current_miner.get_mining_stats() if current_miner else {'is_mining': False}
+            wallet_balance = 0
+            wallet_address = ''
+            
+            if current_wallet:
+                try:
+                    wallet_balance = blockchain.get_balance(current_wallet.get_address())
+                    wallet_address = current_wallet.get_address()
+                except Exception as e:
+                    print(f"⚠️ Error getting wallet balance: {e}")
+            
+            # Get node stats
+            node_stats = {
+                'is_running': node.is_running if node else False,
+                'peer_count': len(node.get_peers()) if node else 0
+            }
+            
+            stats = {
+                'blockchain': blockchain_stats,
+                'mining': mining_stats,
+                'wallet': {
+                    'address': wallet_address,
+                    'balance': wallet_balance
+                },
+                'node': node_stats,
+                'timestamp': time.time()
+            }
+            
+            socketio.emit('stats_update', stats)
+            
+        except Exception as e:
+            print(f"⚠️ Error in background updates: {e}")
+            socketio.sleep(5)  # Wait longer on error
 
 socketio.start_background_task(background_updates)
 

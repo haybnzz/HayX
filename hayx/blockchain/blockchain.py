@@ -100,6 +100,16 @@ class Blockchain:
         self.save_blockchain()
         return new_block
 
+    def mine_empty_block(self, mining_reward_address):
+        """Mine an empty block with only mining reward transaction"""
+        reward_tx = Transaction("coinbase", mining_reward_address, self.mining_reward, 0)
+        
+        new_block = Block(len(self.chain), [reward_tx], self.get_latest_block().hash)
+        new_block.mine_block(self.difficulty)
+        self.chain.append(new_block)
+        self.save_blockchain()
+        return new_block
+
     def get_balance(self, address):
         balance = 0
         for block in self.chain:

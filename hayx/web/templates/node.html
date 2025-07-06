@@ -8,69 +8,315 @@
     <div class="page-actions">
         <button id="startNode" class="btn btn-success" {% if node_stats.is_running %}disabled{% endif %}>▶️ Start Node</button>
         <button id="stopNode" class="btn btn-danger" {% if not node_stats.is_running %}disabled{% endif %}>⏹️ Stop Node</button>
+        <button id="refreshNode" class="btn btn-secondary">🔄 Refresh</button>
+    </div>
+</div>
+
+<div class="grid">
+    <div class="card">
+        <div class="card-header">
+            <h3>Node Status</h3>
+        </div>
+        <div class="card-body">
+            <div class="info-row">
+                <label>Status:</label>
+                <span id="nodeStatus">{% if node_stats.is_running %}🟢 Running{% else %}🔴 Stopped{% endif %}</span>
+            </div>
+            <div class="info-row">
+                <label>Listening Port:</label>
+                <span id="nodePort">{{ node_stats.port }}</span>
+            </div>
+            <div class="info-row">
+                <label>Connected Peers:</label>
+                <span id="peerCount">{{ node_stats.peer_count }}</span>
+            </div>
+            <div class="info-row">
+                <label>Last Update:</label>
+                <span id="lastUpdate">Never</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3>Add Peer</h3>
+        </div>
+        <div class="card-body">
+            <form id="addPeerForm" class="add-peer-form">
+                <div class="form-group">
+                    <label for="peerAddress">Peer Address:</label>
+                    <input type="text" id="peerAddress" class="form-control" placeholder="192.168.1.100:5001" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Peer</button>
+            </form>
+        </div>
     </div>
 </div>
 
 <div class="card">
     <div class="card-header">
-        <h3>Node Status</h3>
+        <h3>Connected Peers</h3>
+        <div class="header-actions">
+            <button id="refreshPeers" class="btn btn-sm btn-secondary">🔄 Refresh</button>
+        </div>
     </div>
     <div class="card-body">
-        <div class="info-row">
-            <label>Status:</label>
-            <span>{% if node_stats.is_running %}🟢 Running{% else %}🔴 Stopped{% endif %}</span>
-        </div>
-        <div class="info-row">
-            <label>Listening Port:</label>
-            <span>{{ node_stats.port }}</span>
-        </div>
-        <div class="info-row">
-            <label>Connected Peers:</label>
-            <span>{{ node_stats.peer_count }}</span>
+        <div id="peersList">
+            {% if peers %}
+            <ul class="peer-list">
+                {% for peer in peers %}
+                <li class="peer-item">
+                    <span class="peer-address">{{ peer }}</span>
+                    <span class="peer-status">🟢 Connected</span>
+                </li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>No peers connected.</p>
+            {% endif %}
         </div>
     </div>
 </div>
 
 <div class="card">
     <div class="card-header">
-        <h3>Peers</h3>
+        <h3>Network Activity</h3>
     </div>
     <div class="card-body">
-        {% if peers %}
-        <ul class="peer-list">
-            {% for peer in peers %}
-            <li>{{ peer }}</li>
-            {% endfor %}
-        </ul>
-        {% else %}
-        <p>No peers connected.</p>
-        {% endif %}
+        <div id="networkActivity">
+            <p>No recent network activity...</p>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-document.getElementById('startNode')?.addEventListener('click', function () {
+const socket = io();
+let lastUpdateTime = null;
+
+// Socket event handlers
+socket.on('connect', function() {
+    console.log('Connected to server');
+    updateLastUpdateTime();
+});
+
+socket.on('disconnect', function() {
+    console.log('Disconnected from server');
+});
+
+socket.on('stats_update', function(data) {
+    console.log('Received stats update:', data);
+    
+    const node = data.node || {};
+    
+    // Update node status
+    if (node.is_running !== undefined) {
+        const statusEl = document.getElementById('nodeStatus');
+        statusEl.textContent = node.is_running ? '🟢 Running' : '🔴 Stopped';
+    }
+    
+    if (node.peer_count !== undefined) {
+        document.getElementById('peerCount').textContent = node.peer_count;
+    }
+    
+    updateLastUpdateTime();
+});
+
+function updateLastUpdateTime() {
+    lastUpdateTime = new Date();
+    document.getElementById('lastUpdate').textContent = 
+        'Last updated: ' + lastUpdateTime.toLocaleTimeString();
+}
+
+// Node control functions
+document.getElementById('startNode')?.addEventListener('click', function() {
     fetch('/api/node/start', { method: 'POST' })
         .then(r => r.json())
         .then(data => {
             if (data.status === 'success') {
                 alert('Node started successfully');
-                location.reload();
+                updateNodeStatus(true);
+                addNetworkActivity('Node started');
+            } else {
+                alert('Failed to start node: ' + (data.message || 'Unknown error'));
             }
+        })
+        .catch(error => {
+            console.error('Error starting node:', error);
+            alert('Failed to start node');
         });
 });
 
-document.getElementById('stopNode')?.addEventListener('click', function () {
+document.getElementById('stopNode')?.addEventListener('click', function() {
     fetch('/api/node/stop', { method: 'POST' })
         .then(r => r.json())
         .then(data => {
             if (data.status === 'success') {
                 alert('Node stopped');
-                location.reload();
+                updateNodeStatus(false);
+                addNetworkActivity('Node stopped');
+            } else {
+                alert('Failed to stop node: ' + (data.message || 'Unknown error'));
             }
+        })
+        .catch(error => {
+            console.error('Error stopping node:', error);
+            alert('Failed to stop node');
         });
+});
+
+document.getElementById('refreshNode')?.addEventListener('click', function() {
+    fetch('/api/node/status')
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error fetching node status:', data.error);
+                return;
+            }
+            
+            document.getElementById('nodeStatus').textContent = 
+                data.is_running ? '🟢 Running' : '🔴 Stopped';
+            document.getElementById('peerCount').textContent = data.peer_count;
+            
+            // Update peers list
+            updatePeersList(data.peers || []);
+            
+            updateLastUpdateTime();
+        })
+        .catch(error => {
+            console.error('Error refreshing node status:', error);
+        });
+});
+
+document.getElementById('refreshPeers')?.addEventListener('click', function() {
+    fetch('/api/node/status')
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Error fetching peers:', data.error);
+                return;
+            }
+            
+            updatePeersList(data.peers || []);
+            updateLastUpdateTime();
+        })
+        .catch(error => {
+            console.error('Error refreshing peers:', error);
+        });
+});
+
+// Add peer form
+document.getElementById('addPeerForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const peerAddress = document.getElementById('peerAddress').value.trim();
+    if (!peerAddress) {
+        alert('Please enter a peer address');
+        return;
+    }
+    
+    fetch('/api/node/add-peer', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({peer_address: peerAddress})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Peer added successfully');
+            document.getElementById('addPeerForm').reset();
+            addNetworkActivity(`Added peer: ${peerAddress}`);
+            
+            // Refresh peers list
+            setTimeout(() => {
+                document.getElementById('refreshPeers').click();
+            }, 1000);
+        } else {
+            alert('Failed to add peer: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error adding peer:', error);
+        alert('Failed to add peer');
+    });
+});
+
+function updateNodeStatus(isRunning) {
+    const startBtn = document.getElementById('startNode');
+    const stopBtn = document.getElementById('stopNode');
+    const statusEl = document.getElementById('nodeStatus');
+    
+    if (isRunning) {
+        statusEl.textContent = '🟢 Running';
+        startBtn.disabled = true;
+        stopBtn.disabled = false;
+    } else {
+        statusEl.textContent = '🔴 Stopped';
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+    }
+}
+
+function updatePeersList(peers) {
+    const peersListEl = document.getElementById('peersList');
+    
+    if (peers.length === 0) {
+        peersListEl.innerHTML = '<p>No peers connected.</p>';
+        return;
+    }
+    
+    const peersList = document.createElement('ul');
+    peersList.className = 'peer-list';
+    
+    peers.forEach(peer => {
+        const peerItem = document.createElement('li');
+        peerItem.className = 'peer-item';
+        peerItem.innerHTML = `
+            <span class="peer-address">${peer}</span>
+            <span class="peer-status">🟢 Connected</span>
+        `;
+        peersList.appendChild(peerItem);
+    });
+    
+    peersListEl.innerHTML = '';
+    peersListEl.appendChild(peersList);
+}
+
+function addNetworkActivity(message) {
+    const activityDiv = document.getElementById('networkActivity');
+    const timestamp = new Date().toLocaleTimeString();
+    const activityItem = document.createElement('div');
+    activityItem.className = 'activity-item';
+    activityItem.innerHTML = `<span class="activity-time">${timestamp}</span> <span class="activity-message">${message}</span>`;
+    
+    activityDiv.insertBefore(activityItem, activityDiv.firstChild);
+    
+    // Keep only last 10 activities
+    const activities = activityDiv.querySelectorAll('.activity-item');
+    if (activities.length > 10) {
+        activities[activities.length - 1].remove();
+    }
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    // Request initial stats
+    socket.emit('get_stats');
+    
+    // Set up periodic stats requests
+    setInterval(() => {
+        if (socket.connected) {
+            socket.emit('get_stats');
+        }
+    }, 10000); // Update every 10 seconds
+});
+
+// Handle page visibility changes
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        socket.emit('get_stats');
+    }
 });
 </script>
 {% endblock %}
