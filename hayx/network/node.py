@@ -130,6 +130,14 @@ class Node:
             new_peers = set(message['data'])
             self.peers.update(new_peers)
             save_peers(list(self.peers))
+        
+        elif msg_type == 'get_peers':
+            # Peer requested our peer list; respond with current peers
+            response = {
+                'type': 'peer_list',
+                'data': list(self.peers)
+            }
+            self._send_message(client_socket, response)
     
     def _handle_received_chain(self, chain_data):
         """Handle received blockchain from peer"""
