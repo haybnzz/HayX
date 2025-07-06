@@ -49,7 +49,7 @@
                     <div class="stat-label">Blocks Mined</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value" id="totalRewards">{{ "%.2f"|format(mining_stats.blocks_mined * 50) }}</div>
+                    <div class="stat-value" id="totalRewards">{{ "%.2f"|format(mining_stats.blocks_mined * 1.0) }}</div>
                     <div class="stat-label">Total Rewards (HayX)</div>
                 </div>
                 <div class="stat-item">
@@ -254,7 +254,7 @@ socket.on('stats_update', function(data) {
     // Update mining stats
     document.getElementById('hashRate').innerText = (mining.hash_rate || 0).toFixed(2);
     document.getElementById('blocksMinedCount').innerText = mining.blocks_mined || 0;
-    document.getElementById('totalRewards').innerText = ((mining.blocks_mined || 0) * 50).toFixed(2);
+    document.getElementById('totalRewards').innerText = (mining.total_rewards || 0).toFixed(2);
     document.getElementById('walletBalance').innerText = (wallet.balance || 0).toFixed(8);
     document.getElementById('currentDifficulty').innerText = mining.difficulty || 1;
     
@@ -274,7 +274,7 @@ socket.on('stats_update', function(data) {
     
     // Add mining activity log
     if (mining.blocks_mined > 0) {
-        addMiningActivity(`Block mined! Reward: 50 HayX`);
+        addMiningActivity(`Block mined! Reward: ${mining.mining_reward || 1.0} HayX`);
     }
 });
 

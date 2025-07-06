@@ -184,12 +184,16 @@ def get_mining_stats_api():
         return jsonify({
             'hash_rate': stats.get('hash_rate', 0),
             'blocks_mined': stats.get('blocks_mined', 0),
-            'total_rewards': stats.get('blocks_mined', 0) * 50,
+            'total_rewards': stats.get('total_rewards', 0),
             'is_mining': stats.get('is_mining', False),
             'difficulty': blockchain.difficulty if hasattr(blockchain, 'difficulty') else 1,
             'pending_transactions': len(blockchain.pending_transactions) if hasattr(blockchain, 'pending_transactions') else 0,
             'wallet_balance': wallet_balance,
             'wallet_address': current_wallet.get_address(),
+            'mining_reward': stats.get('mining_reward', 1.0),
+            'target_block_time': stats.get('target_block_time', 60),
+            'total_hash_count': stats.get('total_hash_count', 0),
+            'mining_duration': stats.get('mining_duration', 0),
             'timestamp': time.time()
         })
     except Exception as e:
