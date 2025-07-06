@@ -9,18 +9,3 @@ ecdsa==0.18.0
 # HTTP requests
 requests==2.31.0
 
-# Standard libraries (included with Python, listed for clarity)
-# -hashlib
-# hashlib (stdlib)
-# -threading
-# threading (stdlib)
-# -json
-# json (stdlib)
-# -time
-# time (stdlib)
-# -socket
-# socket (stdlib)
-# -random
-# random (stdlib)
-# -argparse
-# argparse (stdlib)
