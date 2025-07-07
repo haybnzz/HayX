@@ -1,8 +1,0 @@
-{
-  "name": "test_wallet",
-  "private_key": "32d0b523fb51189cc3888a32754b3ddf0e5d0672dc3ec77e09fd1014d5ba0fd1",
-  "public_key": "6f281bec12dda649a43cadb414dcb426861fd7a45d6d680f93c4422830a66e02355290a7310d2a4a55ef6ca9eb6ab110e80fedaa99cca185968abe4d76eb7a58",
-  "address": "9f9fe20eae3a13165df2",
-  "balance": 0.0,
-  "transactions": []
-}

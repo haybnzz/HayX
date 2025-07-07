@@ -71,20 +71,18 @@ class Miner:
                         self.blocks_mined += 1
                         mining_time = end_time - start_time
                         self.last_block_time = datetime.now()
-                        
+                        reward = self.blockchain.get_block_reward(new_block.index)
                         print(f"✅ Block #{new_block.index} mined successfully!")
                         print(f"Hash: {new_block.hash[:16]}...")
                         print(f"Mining time: {mining_time:.2f} seconds")
                         print(f"Nonce: {new_block.nonce}")
-                        print(f"Reward: {self.mining_reward} HayX")
+                        print(f"Reward: {reward} HayX")
                         print(f"Hash rate: {self.hash_rate:.2f} H/s")
-                        
-                        # Reset block timer
                         block_start_time = time.time()
                     else:
                         print("❌ Failed to mine block")
                         time.sleep(1)
-                        
+                
                 else:
                     # No pending transactions, mine empty block after target time
                     elapsed_time = time.time() - block_start_time
@@ -99,12 +97,10 @@ class Miner:
                             self.blocks_mined += 1
                             mining_time = end_time - start_time
                             self.last_block_time = datetime.now()
-                            
+                            reward = self.blockchain.get_block_reward(new_block.index)
                             print(f"✅ Empty block #{new_block.index} mined!")
                             print(f"Hash rate: {self.hash_rate:.2f} H/s")
-                            print(f"Reward: {self.mining_reward} HayX")
-                            
-                            # Reset block timer
+                            print(f"Reward: {reward} HayX")
                             block_start_time = time.time()
                         else:
                             print("❌ Failed to mine empty block")
@@ -112,7 +108,7 @@ class Miner:
                     else:
                         # Continue hashing while waiting
                         time.sleep(0.1)
-                        
+                
             except Exception as e:
                 print(f"❌ Mining error: {e}")
                 time.sleep(1)
@@ -144,17 +140,22 @@ class Miner:
     
     def get_mining_stats(self):
         """Get comprehensive mining statistics"""
+        reward = self.blockchain.get_block_reward()
+        if self.mining_start_time is not None:
+            mining_duration = time.time() - self.mining_start_time
+        else:
+            mining_duration = 0
         return {
             'is_mining': self.is_mining,
             'hash_rate': self.hash_rate,
             'blocks_mined': self.blocks_mined,
             'wallet_address': self.wallet_address,
             'difficulty': self.blockchain.difficulty,
-            'total_rewards': self.blocks_mined * self.mining_reward,
+            'total_rewards': self.blocks_mined * reward,
             'last_block_time': self.last_block_time.isoformat() if self.last_block_time else None,
             'target_block_time': self.target_block_time,
-            'mining_reward': self.mining_reward,
+            'mining_reward': reward,
             'hash_rate_history': self.hash_rate_history[-20:] if self.hash_rate_history else [],
             'total_hash_count': self.total_hash_count,
-            'mining_duration': time.time() - self.mining_start_time if self.mining_start_time else 0
+            'mining_duration': mining_duration
         }

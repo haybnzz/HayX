@@ -9,8 +9,11 @@ class Config:
     
     # Mining Configuration
     DIFFICULTY_TARGET = 4  # Number of leading zeros required
-    BLOCK_TIME_TARGET = 30  # Target block time in seconds
-    MINING_REWARD = 50.0
+    BLOCK_TIME_TARGET = 60  # Target block time in seconds (HayX spec)
+    MINING_REWARD = 10.0  # HayX block reward
+    HALVING_INTERVAL = 525600  # Blocks per halving (~1 year)
+    COIN_NAME = 'HayX Coin'
+    SYMBOL = 'HX'
     
     # Blockchain Configuration
     GENESIS_REWARD = 1000000.0

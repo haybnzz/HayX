@@ -88,25 +88,51 @@ class Blockchain:
             return True
         return self.get_balance(transaction.sender) >= (transaction.amount + transaction.fee)
 
+    def get_block_reward(self, height=None):
+        """Calculate mining reward with halving."""
+        if height is None:
+            height = len(self.chain)
+        halvings = height // Config.HALVING_INTERVAL
+        return Config.MINING_REWARD / (2 ** halvings)
+
+    def get_lwma_difficulty(self, window=60):
+        """Calculate difficulty using LWMA algorithm."""
+        if len(self.chain) < window + 1:
+            return self.difficulty
+        sum_inverse = 0
+        weighted_times = 0
+        k = window * (window + 1) // 2
+        for i in range(1, window + 1):
+            block = self.chain[-i]
+            prev_block = self.chain[-i - 1]
+            solve_time = block.timestamp - prev_block.timestamp
+            solve_time = max(1, min(solve_time, 6 * Config.BLOCK_TIME_TARGET))
+            weighted_times += solve_time * i
+            sum_inverse += i
+        avg = weighted_times / k
+        new_difficulty = max(1, int(self.difficulty * Config.BLOCK_TIME_TARGET / avg))
+        return new_difficulty
+
     def mine_pending_transactions(self, mining_reward_address):
-        reward_tx = Transaction("coinbase", mining_reward_address, self.mining_reward, 0)
+        reward = self.get_block_reward()
+        reward_tx = Transaction("coinbase", mining_reward_address, reward, 0)
         txs = self.pending_transactions[:Config.MAX_TRANSACTIONS_PER_BLOCK - 1]
         txs.append(reward_tx)
-
         new_block = Block(len(self.chain), txs, self.get_latest_block().hash)
-        new_block.mine_block(self.difficulty)
+        new_block.mine_block(self.get_lwma_difficulty())
         self.chain.append(new_block)
         self.pending_transactions = self.pending_transactions[Config.MAX_TRANSACTIONS_PER_BLOCK - 1:]
+        self.difficulty = self.get_lwma_difficulty()
         self.save_blockchain()
         return new_block
 
     def mine_empty_block(self, mining_reward_address):
-        """Mine an empty block with only mining reward transaction"""
-        reward_tx = Transaction("coinbase", mining_reward_address, self.mining_reward, 0)
-        
+        reward = self.get_block_reward()
+        reward_tx = Transaction("coinbase", mining_reward_address, reward, 0)
         new_block = Block(len(self.chain), [reward_tx], self.get_latest_block().hash)
-        new_block.mine_block(self.difficulty)
+        new_block.mine_block(self.get_lwma_difficulty())
         self.chain.append(new_block)
+        self.difficulty = self.get_lwma_difficulty()
         self.save_blockchain()
         return new_block
 
